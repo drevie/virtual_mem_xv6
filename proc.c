@@ -242,8 +242,16 @@ wait(void)
         // Found one.
         pid = p->pid;
         kfree(p->kstack);
+        // BEGIN CHANGES
         p->kstack = 0;
-        freevm(p->pgdir);
+        if (p->shared == 0) { // clean the memory space iff it is not shared
+          freevm(p->pgdir);
+        }
+        else {
+          // check whether the process need to clean the memory or not
+          cowfreevm(p->pgdir);
+          p->shared = 0;
+        }
         p->state = UNUSED;
         p->pid = 0;
         p->parent = 0;
@@ -251,8 +259,9 @@ wait(void)
         p->killed = 0;
         release(&ptable.lock);
         return pid;
+        // END CHANGES
       }
-    }
+}
 
     // No point waiting if we don't have any children.
     if(!havekids || proc->killed){
