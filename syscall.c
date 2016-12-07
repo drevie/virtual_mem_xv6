@@ -7,6 +7,10 @@
 #include "x86.h"
 #include "syscall.h"
 
+// BEGIN CHANGES
+#include "signal.h"
+// END CHANGES
+
 // User code makes a system call with INT T_SYSCALL.
 // System call number in %eax.
 // Arguments on the stack, from the user call to the C
