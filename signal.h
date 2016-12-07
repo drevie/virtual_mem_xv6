@@ -18,6 +18,6 @@ typedef struct
 } siginfo_t;
 // END CHANGES
 
-typedef void (*sighandler_t)(int);
+//typedef void (*sighandler_t)(int);
 
 #endif
