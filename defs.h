@@ -118,6 +118,9 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+// BEGIN CHANGES
+int cowfork(void); 
+int dgrowproc(int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);
@@ -178,6 +181,16 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
+// BEGIN CHANGES
+int mprotect(int addr, int len, int prot); 
+int cowcopyuvm(void); 
+pde_t* cowmapuvm(pde_t*, uint);
+void sharetableinit(void);
+void cowfreevm(pde_t*);
+int dchangesize(uint, uint);
+int dallocuvm(pde_t*, uint, uint);
+// END CHANGES
+
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

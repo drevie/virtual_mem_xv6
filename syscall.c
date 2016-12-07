@@ -101,6 +101,12 @@ extern int sys_uptime(void);
 extern int sys_halt(void);
 extern int sys_signal_register(void);
 extern int sys_signal_restorer(void);
+// BEGIN CHANGES
+extern int sys_mprotect(void); 
+extern int sys_cowfork(void); 
+extern int sysdsbrk(void); 
+// END CHANGES
+
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -127,6 +133,11 @@ static int (*syscalls[])(void) = {
 [SYS_halt]    sys_halt,
 [SYS_signal_register]  sys_signal_register,
 [SYS_signal_restorer]   sys_signal_restorer,
+// BEGIN CHANGES
+[SYS_mprotect] sys_mprotect,
+[SYS_cowfork] sys_cowfork,
+[SYS_dsbrk] sys_dsbrk,
+// END CHANGES
 };
 
 void

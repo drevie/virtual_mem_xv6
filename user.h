@@ -26,6 +26,12 @@ int uptime(void);
 int halt(void);
 int signal_register(int, void(*)(int));
 int signal_restorer(void(*)(void));
+// BEGIN CHANGES
+int mprotect(void*, int, int);
+int cowfork(void);
+char* dsbrk(int);
+// END CHANGES
+
 
 // ulib.c
 int stat(char*, struct stat*);

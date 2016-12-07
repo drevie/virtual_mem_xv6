@@ -5,7 +5,9 @@
 void handle_signal(int signum)
 {
     unsigned addr_signum = (unsigned) &signum;
-    unsigned addr_retaddr = addr_signum + 16;
+    // BEGIN CHANGES
+    unsigned addr_retaddr = addr_signum + 24;
+    // END CHANGES
     unsigned *retaddr = (unsigned*) addr_retaddr;
     printf(1, "addr_signum = %d\n", addr_signum);
     printf(1, "addr_retaddr = %d\n", addr_retaddr);

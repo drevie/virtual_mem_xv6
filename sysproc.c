@@ -130,3 +130,56 @@ int sys_signal_restorer(void)
     
     return 0;
 }
+
+// BEGIN CHANGES sys_mprotect
+int sys_mprotect(void)
+{
+  cprintf("In mprotect system call.\n");
+  int addr;
+  int len;
+  int prot;
+
+  if (argint(0, &addr) < 0)
+    return -1;
+  if (argint(1, &len) < 0)
+    return -1;
+  if (argint(2, &prot) < 0)
+    return -1;
+
+  if (prot > 0x003 || prot == 0x002) // invalid input for protection level
+    return -1;
+  cprintf("addr: %d\nlen: %d\nprot: %d\n", addr, len, prot);
+
+  return mprotect(addr, len, prot);
+}
+// END CHANGES sys_mprotect
+
+// BEGIN CHANGES sys_cowfork
+int sys_cowfork(void)
+{
+  return cowfork();
+}
+// END CHANGES sys_cowfork
+
+// BEGIN CHANGES sys_dsbrk
+int sys_dsbrk(void)
+{
+  int addr;
+  int n;
+  
+  if (proc->actualsz == 0) {
+    // cprintf("original proc size: %d\n", proc->sz);
+    // cprintf("actual proc size: %d\n", proc->actualsz);
+    proc->actualsz = proc->sz;
+  }
+  
+  if(argint(0, &n) < 0)
+    return -1;
+  addr = proc->sz;
+  if(dgrowproc(n) < 0)
+    return -1;
+  
+  // cprintf("proc size: %d\n", proc->sz);
+  return addr;
+}
+// END CHANGES sys_dsbrk

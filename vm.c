@@ -384,3 +384,204 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
+// BEGIN CHANGES
+int
+mprotect(addr, len, prot)
+{
+  pte_t *pte;
+
+  int i;
+  for (i  = 0; i < len; ++i) {
+    pte = walkpgdir(proc->pgdir, (void*) addr + i, 0);
+
+    cprintf("before change, content: %d\n", *pte);
+    *pte &= 0xFFFFFFFC; // disable the last two bits;
+    *pte |= prot; // set the corresponding permission
+    cprintf("after change, content: %d\n", *pte);
+  }
+
+  lcr3(v2p(proc->pgdir)); // flush the TLB
+  return 0;
+}
+
+// structure to hold sharing information
+struct entry
+{
+  // struct spinlock lock;
+  int count;
+} shareTable[60 * 1024]; // table for all pages, upto 240MB(PHYSTOP)
+
+struct spinlock tablelock; // lock for share table
+
+// share table initialize function
+void
+sharetableinit(void)
+{
+  initlock(&tablelock, "sharetable");
+  // cprintf("share table init done\n");
+}
+
+// Given a parent process's page table, remap
+// it for a COW child.
+pde_t*
+cowmapuvm(pde_t *pgdir, uint sz)
+{
+  // cprintf("in cow map\n");
+
+  pde_t *d;
+  pte_t *pte;
+  uint pa, i, flags;
+  int index;
+
+  if((d = setupkvm()) == 0)
+    return 0;
+  acquire(&tablelock);
+  for(i = 0; i < sz; i += PGSIZE){
+    if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+      panic("copyuvm: pte should exist");
+    if(!(*pte & PTE_P))
+      panic("copyuvm: page not present");
+    *pte &= ~PTE_W; // disable the Writable bit
+    pa = PTE_ADDR(*pte);
+    flags = PTE_FLAGS(*pte);
+
+    // instead of create new pages, remap the pages for cow child
+    if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0)
+      goto bad;
+
+    index = (pa >> 12) & 0xFFFFF; // get the physical page num
+    if (shareTable[index].count == 0) {
+      shareTable[index].count = 2; // now is shared, totally 2 processes
+    }
+    else {
+      ++shareTable[index].count; // increase the share count
+    }
+    
+    // cprintf("pid: %d index: %d count: %d\n", proc->pid, index, shareTable[index].count);
+  }
+  release(&tablelock);
+  lcr3(v2p(proc->pgdir)); // flush the TLB  
+  return d;
+
+bad:
+  freevm(d);
+  return 0;
+}
+
+int
+cowcopyuvm(void)
+{
+// cprintf("in cow copy, index: %d\n", index);
+ uint pa;
+  int index;
+  uint addr;
+  pte_t *pte;
+  char *mem;
+
+  addr = rcr2();
+  pte = walkpgdir(proc->pgdir, (void *) addr, 0);
+  pa = PTE_ADDR(*pte);
+  index = (pa >> 12) & 0xFFFFF; // get the physical page num
+
+  // check if the address is in this process's user space
+  if (addr < proc->sz) {
+    acquire(&tablelock);
+
+    // if there are still multiple processes using this space
+    if (shareTable[index].count > 1) {
+      if((mem = kalloc()) == 0) // allcoate a new page in physical memory
+        goto bad;
+      memmove(mem, (char*)p2v(pa), PGSIZE);
+      *pte &= 0xFFF; // reset the first 20 bits of the entry
+      *pte |= v2p(mem) | PTE_W; // insert the new physical page num and set to writable
+
+      --shareTable[index].count; // decrease the share count
+    }
+    // if there is only one process using this space
+    else {
+      *pte |= PTE_W; // just enable the Writable bit for this process
+    }
+
+    release(&tablelock);
+    lcr3(v2p(proc->pgdir)); // flush the TLB
+    return 1;
+  }
+
+bad:
+  return 0;
+} 
+
+int
+cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
+{
+  pte_t *pte;
+  uint a, pa;
+  int index;
+
+  if(newsz >= oldsz)
+    return oldsz;
+   a = PGROUNDUP(newsz);
+  acquire(&tablelock);
+  for(; a < oldsz; a += PGSIZE){
+    pte = walkpgdir(pgdir, (char*)a, 0);
+    if(!pte)
+      a += (NPTENTRIES - 1) * PGSIZE;
+    else if((*pte & PTE_P) != 0){
+      pa = PTE_ADDR(*pte);
+      index = (pa >> 12) & 0xFFFFF; // get the physical page num
+      if(pa == 0)
+        panic("kfree");
+      // if there are more than one process sharing the space, decrease the counter
+      if (shareTable[index].count > 1) {
+        --shareTable[index].count;
+      }
+      // if the memory space is only used by this process, free it
+      else {
+        char *v = p2v(pa);
+        kfree(v);
+        shareTable[index].count = 0;
+      }
+      *pte = 0;
+    }
+  }
+  release(&tablelock);
+  return newsz;
+}
+
+void
+cowfreevm(pde_t *pgdir)
+{
+  uint i;
+
+  if(pgdir == 0)
+    panic("freevm: no pgdir");
+  cowdeallocuvm(pgdir, KERNBASE, 0);
+  for(i = 0; i < NPDENTRIES; i++){
+    if(pgdir[i] & PTE_P){
+      char *v = p2v(PTE_ADDR(pgdir[i]));
+      kfree(v);
+    }
+}
+
+ kfree((char*)pgdir);
+}
+
+// Calculate the new size for growing process from oldsz to
+// newsz, which need not be page aligned. Returns new size or 0 on error.
+int
+dchangesize(uint oldsz, uint newsz)
+{
+  uint a;
+
+  if(newsz >= KERNBASE)
+    return 0;
+  if(newsz < oldsz)
+    return oldsz;
+
+  a = PGROUNDUP(oldsz);
+  for(; a < newsz; a += PGSIZE){}
+  return newsz;
+}
+
+    Contact GitHub API Training Shop Blog About 
+

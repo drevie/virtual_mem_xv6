@@ -70,6 +70,10 @@ struct proc {
   char name[16];               // Process name (debugging)
   sighandler_t handlers[2];    // Signal handlers
   uint restorer_addr;          // Signal restorer
+  // BEGIN CHANGES
+  int shared; 
+  uint actualsz; 
+  // END CHANGES
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -78,5 +82,7 @@ struct proc {
 //   fixed-size stack
 //   expandable heap
 
-void signal_deliver(int signum);
+// BEGIN CHANGES
+void signal_deliver(int signum, siginfo_t info);
+// END CHANGES
 sighandler_t signal_register_handler(int signum, sighandler_t handler);

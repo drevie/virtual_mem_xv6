@@ -40,6 +40,9 @@ main(void)
   userinit();      // first user process
   // Finish setting up this processor in mpmain.
   mpmain();
+  // BEGIN CHANGES
+  sharetableinit();
+  // END CHANGES
 }
 
 // Other CPUs jump here from entryother.S.

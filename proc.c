@@ -468,19 +468,26 @@ procdump(void)
   }
 }
 
-void signal_deliver(int signum)
-{
-	uint old_eip = proc->tf->eip;
 
-	*((uint*)(proc->tf->esp - 4))  = (uint) old_eip;		// real return address
-	*((uint*)(proc->tf->esp - 8))  = proc->tf->eax;			// eax
-	*((uint*)(proc->tf->esp - 12)) = proc->tf->ecx;			// ecx
-	*((uint*)(proc->tf->esp - 16)) = proc->tf->edx;			// edx
-	*((uint*)(proc->tf->esp - 20)) = (uint) signum;			// signal number
-	*((uint*)(proc->tf->esp - 24)) = proc->restorer_addr;	// address of restorer
-	proc->tf->esp -= 24;
-	proc->tf->eip = (uint) proc->handlers[signum];
+// BEGIN CHANGES signal_deliver
+// change function arguments
+void signal_deliver(int signum, siginfo_t info)
+{
+ uint old_eip = proc->tf->eip;
+  // cprintf("tf->eip: %d\n", old_eip);
+
+  *((uint*)(proc->tf->esp - 4))  = (uint) old_eip;    // real return address
+  *((uint*)(proc->tf->esp - 8))  = proc->tf->eax;     // eax
+  *((uint*)(proc->tf->esp - 12)) = proc->tf->ecx;     // ecx
+  *((uint*)(proc->tf->esp - 16)) = proc->tf->edx;     // edx
+  *((uint*)(proc->tf->esp - 20)) = info.type;     // push info.type
+  *((uint*)(proc->tf->esp - 24)) = info.addr;     // push info.addr
+  *((uint*)(proc->tf->esp - 28)) = (uint) signum;     // signal number
+  *((uint*)(proc->tf->esp - 32)) = proc->restorer_addr; // address of restorer
+  proc->tf->esp -= 32;
+  proc->tf->eip = (uint) proc->handlers[signum];
 }
+// END CHANGES signal_deliver
 
 sighandler_t signal_register_handler(int signum, sighandler_t handler)
 {
@@ -493,3 +500,49 @@ sighandler_t signal_register_handler(int signum, sighandler_t handler)
 
 	return previous;
 }
+
+// BEGIN CHANGES cowfork
+int cowfork(void)
+{
+  int i, pid;
+  struct proc *np;
+
+  // Allocate process.
+  if((np = allocproc()) == 0)
+    return -1;
+
+  // Copy process state from p.
+  if((np->pgdir = cowmapuvm(proc->pgdir, proc->sz)) == 0){
+    kfree(np->kstack);
+    np->kstack = 0;
+    np->state = UNUSED;
+    return -1;
+  }
+  np->sz = proc->sz;
+  np->parent = proc;
+  *np->tf = *proc->tf;
+
+  // Clear %eax so that fork returns 0 in the child.
+  np->tf->eax = 0;
+
+  // set the shared flag to 1
+  proc->shared = 1;
+  np->shared = 1;
+
+  for(i = 0; i < NOFILE; i++)
+    if(proc->ofile[i])
+      np->ofile[i] = filedup(proc->ofile[i]);
+  np->cwd = idup(proc->cwd);
+
+  safestrcpy(np->name, proc->name, sizeof(proc->name));
+ 
+  pid = np->pid;
+
+  // lock to force the compiler to emit the np->state write last.
+  acquire(&ptable.lock);
+  np->state = RUNNABLE;
+  release(&ptable.lock);
+  
+  return pid;
+}
+// END CHANGES cowfork
