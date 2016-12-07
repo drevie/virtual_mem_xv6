@@ -134,11 +134,11 @@ int sys_signal_restorer(void)
 // BEGIN CHANGES sys_mprotect
 int sys_mprotect(void)
 {
-  cprintf("In mprotect system call.\n");
-  int addr;
-  int len;
-  int prot;
+  cprintf("Entered mrprotect syscall\n");
 
+  int addr, len, prot;
+
+  // Check for bad data and return -1 if error
   if (argint(0, &addr) < 0)
     return -1;
   if (argint(1, &len) < 0)
@@ -148,8 +148,11 @@ int sys_mprotect(void)
 
   if (prot > 0x003 || prot == 0x002) // invalid input for protection level
     return -1;
-  cprintf("addr: %d\nlen: %d\nprot: %d\n", addr, len, prot);
 
+  // Begin print
+  cprintf("addr= %d\nlen= %d\nprot= %d\n", addr, len, prot);
+
+  // call mrprotect
   return mprotect(addr, len, prot);
 }
 // END CHANGES sys_mprotect

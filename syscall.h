@@ -24,6 +24,7 @@
 #define SYS_signal_register 23
 #define SYS_signal_restorer 24
 // BEGIN CHANGES
+// Define new syscalls
 #define SYS_mprotect 25
 #define SYS_cowfork 26
 #define SYS_dsbrk 27
