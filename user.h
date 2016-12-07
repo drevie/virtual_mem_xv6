@@ -1,3 +1,7 @@
+// BEGIN CHANGES
+#include "signal.h"
+// END CHANGES
+
 struct stat;
 struct rtcdate;
 
