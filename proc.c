@@ -126,6 +126,9 @@ growproc(int n)
       return -1;
   }
   proc->sz = sz;
+  // BEGIN CHANGES
+  proc->actualsz = sz; 
+  // END CHANGES
   switchuvm(proc);
   return 0;
 }
