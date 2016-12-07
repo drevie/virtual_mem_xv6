@@ -160,6 +160,7 @@ int sys_mprotect(void)
 // BEGIN CHANGES sys_cowfork
 int sys_cowfork(void)
 {
+  // Call cowfork
   return cowfork();
 }
 // END CHANGES sys_cowfork
@@ -167,22 +168,21 @@ int sys_cowfork(void)
 // BEGIN CHANGES sys_dsbrk
 int sys_dsbrk(void)
 {
-  int addr;
-  int n;
+  int addr, n;
   
   if (proc->actualsz == 0) {
-    // cprintf("original proc size: %d\n", proc->sz);
-    // cprintf("actual proc size: %d\n", proc->actualsz);
     proc->actualsz = proc->sz;
   }
   
+  // Check for validity 
   if(argint(0, &n) < 0)
     return -1;
   addr = proc->sz;
+  
   if(dgrowproc(n) < 0)
     return -1;
   
-  // cprintf("proc size: %d\n", proc->sz);
+  // return the address 
   return addr;
 }
 // END CHANGES sys_dsbrk

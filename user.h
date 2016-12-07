@@ -31,6 +31,7 @@ int halt(void);
 int signal_register(int, sighandler_t);
 int signal_restorer(void(*)(void));
 // BEGIN CHANGES
+// prototype functions
 int mprotect(void*, int, int);
 int cowfork(void);
 char* dsbrk(int);
