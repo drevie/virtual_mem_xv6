@@ -421,7 +421,7 @@ int mprotect(addr, len, prot)
 struct spinlock tablelock; // lock for share table
 
 // share table initialize function
-void shared_tableinit(void)
+void shared_table_start(void)
 {
   initlock(&tablelock, "shared_table");
   // cprintf("share table init done\n");

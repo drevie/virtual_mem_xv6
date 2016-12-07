@@ -1,4 +1,4 @@
-#include "types.h"
+su#include "types.h"
 #include "defs.h"
 #include "param.h"
 #include "memlayout.h"
@@ -29,7 +29,7 @@ main(void)
   uartinit();      // serial port
   pinit();         // process table
   // BEGIN CHANGES
-  sharetableinit();
+  shared_table_start();
   // END CHANGES
   tvinit();        // trap vectors
   binit();         // buffer cache
