@@ -546,3 +546,22 @@ int cowfork(void)
   return pid;
 }
 // END CHANGES cowfork
+
+// BEGIN CHANGES dgrowproc
+int dgrowproc(int n)
+{
+  uint sz;
+  
+  sz = proc->sz;
+  if(n > 0){
+    if((sz = dchangesize(sz, sz + n)) == 0)
+      return -1;
+  } 
+  else {
+    cprintf("Could not use dsbrk with inpositive size!\n");
+    return -1;
+  }
+  proc->sz = sz;
+  return 0;
+}
+// END CHANGES dgrowproc
