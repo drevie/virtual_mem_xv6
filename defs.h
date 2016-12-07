@@ -188,7 +188,7 @@ void            clearpteu(pde_t *pgdir, char *uva);
 int mprotect(int addr, int len, int prot); 
 int cowcopyuvm(void); 
 pde_t* cowmapuvm(pde_t*, uint);
-void sharetable(void);
+void sharetableinit(void);
 void cowfreevm(pde_t*);
 int dchangesize(uint, uint);
 int dallocuvm(pde_t*, uint, uint);
