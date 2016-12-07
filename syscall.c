@@ -106,7 +106,7 @@ extern int sys_signal_restorer(void);
 // BEGIN CHANGES
 extern int sys_mprotect(void); 
 extern int sys_cowfork(void); 
-extern int sysdsbrk(void); 
+extern int sys_dsbrk(void); 
 // END CHANGES
 
 
