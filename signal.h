@@ -14,8 +14,8 @@ typedef void (*sighandler_t)(int);
 typedef struct 
 {
 	uint addr;
-	uint type
-}siginfo_t;
+	uint type;
+} siginfo_t;
 // END CHANGES
 
 #endif
