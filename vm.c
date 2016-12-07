@@ -409,7 +409,12 @@ int mprotect(addr, len, prot)
   return 0;
 }
 
-
+// structure to hold sharing information
+struct entry
+{
+  // struct spinlock lock;
+  int count;
+} shareTable[60 * 1024]; // table for all pages, upto 240MB(PHYSTOP)
 
 struct spinlock tablelock; // lock for share table
 
