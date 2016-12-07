@@ -8,7 +8,7 @@
 #define SIGSEGV 14
 // END CHANGES
 
-typedef void (*sighandler_t)(int);
+typedef void (*sighandler_t)(int, siginfo_t);
 
 // BEGIN CHANGES
 typedef struct 
@@ -18,6 +18,6 @@ typedef struct
 } siginfo_t;
 // END CHANGES
 
-//typedef void (*sighandler_t)(int);
+
 
 #endif
