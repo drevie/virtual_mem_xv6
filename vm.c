@@ -583,5 +583,4 @@ dchangesize(uint oldsz, uint newsz)
   return newsz;
 }
 
-    Contact GitHub API Training Shop Blog About 
 
