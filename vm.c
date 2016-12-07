@@ -6,9 +6,7 @@
 #include "mmu.h"
 #include "proc.h"
 #include "elf.h"
-// BEGIN CHANGES
 #include "spinlock.h"
-// END CHANGES
 
 extern char data[];  // defined by kernel.ld
 pde_t *kpgdir;  // for use in scheduler()
@@ -259,7 +257,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     return oldsz;
 
   a = PGROUNDUP(newsz);
-  for(; a  < oldsz; a += PGSIZE){
+  for(; a < oldsz; a += PGSIZE){
     pte = walkpgdir(pgdir, (char*)a, 0);
     if(!pte)
       a += (NPTENTRIES - 1) * PGSIZE;
@@ -287,7 +285,7 @@ freevm(pde_t *pgdir)
   deallocuvm(pgdir, KERNBASE, 0);
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){
-      char * v = p2v(PTE_ADDR(pgdir[i]));
+      char *v = p2v(PTE_ADDR(pgdir[i]));
       kfree(v);
     }
   }
@@ -332,6 +330,8 @@ copyuvm(pde_t *pgdir, uint sz)
     if(mappages(d, (void*)i, PGSIZE, v2p(mem), flags) < 0)
       goto bad;
   }
+
+  // lcr3(v2p(proc->pgdir)); // flush the TLB  
   return d;
 
 bad:
@@ -387,7 +387,6 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
-// BEGIN CHANGES
 int
 mprotect(addr, len, prot)
 {
@@ -474,8 +473,9 @@ bad:
 int
 cowcopyuvm(void)
 {
-// cprintf("in cow copy, index: %d\n", index);
- uint pa;
+  // cprintf("in cow copy, index: %d\n", index);
+
+  uint pa;
   int index;
   uint addr;
   pte_t *pte;
@@ -523,7 +523,8 @@ cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 
   if(newsz >= oldsz)
     return oldsz;
-   a = PGROUNDUP(newsz);
+
+  a = PGROUNDUP(newsz);
   acquire(&tablelock);
   for(; a < oldsz; a += PGSIZE){
     pte = walkpgdir(pgdir, (char*)a, 0);
@@ -564,9 +565,8 @@ cowfreevm(pde_t *pgdir)
       char *v = p2v(PTE_ADDR(pgdir[i]));
       kfree(v);
     }
-}
-
- kfree((char*)pgdir);
+  }
+  kfree((char*)pgdir);
 }
 
 // Calculate the new size for growing process from oldsz to
