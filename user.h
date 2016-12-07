@@ -28,7 +28,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int halt(void);
-int signal_register(int, void(*)(int));
+int signal_register(int, sighandler_t);
 int signal_restorer(void(*)(void));
 // BEGIN CHANGES
 int mprotect(void*, int, int);
