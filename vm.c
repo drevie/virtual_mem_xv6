@@ -423,7 +423,7 @@ struct spinlock tablelock; // lock for share table
 // share table initialize function
 void sharetable(void)
 {
-  initlock(&tablelock, "shared_table");
+  initlock(&tablelock, "sharetable");
   // cprintf("share table init done\n");
 }
 
@@ -455,14 +455,14 @@ pde_t* cowmapuvm(pde_t *pgdir, uint sz)
       goto bad;
 
     index = (pa >> 12) & 0xFFFFF; // get the physical page num
-    if (shared_table[index].count == 0) {
-      shared_table[index].count = 2; // now is shared, totally 2 processes
+    if (sharetable[index].count == 0) {
+      sharetable[index].count = 2; // now is shared, totally 2 processes
     }
     else {
-      ++shared_table[index].count; // increase the share count
+      ++sharetable[index].count; // increase the share count
     }
     
-    // cprintf("pid: %d index: %d count: %d\n", proc->pid, index, shared_table[index].count);
+    // cprintf("pid: %d index: %d count: %d\n", proc->pid, index, sharetable[index].count);
   }
   release(&tablelock);
   lcr3(v2p(proc->pgdir)); // flush the TLB  
@@ -492,14 +492,14 @@ int cowcopyuvm(void)
     acquire(&tablelock);
 
     // if there are still multiple processes using this space
-    if (shared_table[index].count > 1) {
+    if (sharetable[index].count > 1) {
       if((mem = kalloc()) == 0) // allcoate a new page in physical memory
         goto bad;
       memmove(mem, (char*)p2v(pa), PGSIZE);
       *pte &= 0xFFF; // reset the first 20 bits of the entry
       *pte |= v2p(mem) | PTE_W; // insert the new physical page num and set to writable
 
-      --shared_table[index].count; // decrease the share count
+      --sharetable[index].count; // decrease the share count
     }
     // if there is only one process using this space
     else {
@@ -535,14 +535,14 @@ int cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       if(pa == 0)
         panic("kfree");
       // if there are more than one process sharing the space, decrease the counter
-      if (shared_table[index].count > 1) {
-        --shared_table[index].count;
+      if (sharetable[index].count > 1) {
+        --sharetable[index].count;
       }
       // if the memory space is only used by this process, free it
       else {
         char *v = p2v(pa);
         kfree(v);
-        shared_table[index].count = 0;
+        sharetable[index].count = 0;
       }
       *pte = 0;
     }
