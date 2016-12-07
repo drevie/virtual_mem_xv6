@@ -393,7 +393,7 @@ struct entry
 {
   // struct spinlock lock;
   int count;
-} sharetable[60 * 1024]; // table for all pages, upto 240MB(PHYSTOP)
+} shareTable[60 * 1024]; // table for all pages, upto 240MB(PHYSTOP)
 
 // BEGIN CHANGES for custom vm handling
 int mprotect(addr, len, prot)
