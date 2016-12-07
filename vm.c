@@ -387,14 +387,6 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
-
-// structure to hold sharing information
-struct entry
-{
-  // struct spinlock lock;
-  int count;
-} shareTable[60 * 1024]; // table for all pages, upto 240MB(PHYSTOP)
-
 // BEGIN CHANGES for custom vm handling
 int mprotect(addr, len, prot)
 {
@@ -417,11 +409,17 @@ int mprotect(addr, len, prot)
   return 0;
 }
 
+// structure to hold sharing information
+struct entry
+{
+  // struct spinlock lock;
+  int count;
+} shareTable[60 * 1024]; // table for all pages, upto 240MB(PHYSTOP)
 
 struct spinlock tablelock; // lock for share table
 
 // share table initialize function
-void sharetable(void)
+void sharetableinit(void)
 {
   initlock(&tablelock, "sharetable");
   // cprintf("share table init done\n");
@@ -454,15 +452,16 @@ pde_t* cowmapuvm(pde_t *pgdir, uint sz)
     if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0)
       goto bad;
 
-    index = (pa >> 12) & 0xFFFFF; // get the physical page num
-    if (sharetable[index].count == 0) {
-      sharetable[index].count = 2; // now is shared, totally 2 processes
+index = (pa >> 12) & 0xFFFFF; // get the physical page num
+
+  if (shareTable[index].count == 0) {
+      shareTable[index].count = 2; // now is shared, totally 2 processes
     }
     else {
-      ++sharetable[index].count; // increase the share count
+      ++shareTable[index].count; // increase the share count
     }
     
-    // cprintf("pid: %d index: %d count: %d\n", proc->pid, index, sharetable[index].count);
+    // cprintf("pid: %d index: %d count: %d\n", proc->pid, index, shareTable[index].count);
   }
   release(&tablelock);
   lcr3(v2p(proc->pgdir)); // flush the TLB  
@@ -492,16 +491,17 @@ int cowcopyuvm(void)
     acquire(&tablelock);
 
     // if there are still multiple processes using this space
-    if (sharetable[index].count > 1) {
+    if (shareTable[index].count > 1) {
       if((mem = kalloc()) == 0) // allcoate a new page in physical memory
         goto bad;
       memmove(mem, (char*)p2v(pa), PGSIZE);
       *pte &= 0xFFF; // reset the first 20 bits of the entry
       *pte |= v2p(mem) | PTE_W; // insert the new physical page num and set to writable
 
-      --sharetable[index].count; // decrease the share count
-    }
-    // if there is only one process using this space
+      --shareTable[index].count; // decrease the share count
+}
+
+  // if there is only one process using this space
     else {
       *pte |= PTE_W; // just enable the Writable bit for this process
     }
@@ -535,18 +535,19 @@ int cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       if(pa == 0)
         panic("kfree");
       // if there are more than one process sharing the space, decrease the counter
-      if (sharetable[index].count > 1) {
-        --sharetable[index].count;
+      if (shareTable[index].count > 1) {
+        --shareTable[index].count;
       }
       // if the memory space is only used by this process, free it
       else {
         char *v = p2v(pa);
         kfree(v);
-        sharetable[index].count = 0;
+        shareTable[index].count = 0;
       }
       *pte = 0;
-    }
-  }
+}
+
+ }
   release(&tablelock);
   return newsz;
 }
@@ -583,5 +584,4 @@ int dchangesize(uint oldsz, uint newsz)
   for(; a < newsz; a += PGSIZE){}
   return newsz;
 }
-
 
