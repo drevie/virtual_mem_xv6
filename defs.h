@@ -1,3 +1,5 @@
+// BEGIN CHANGES
+#include "signal.h"
 struct buf;
 struct context;
 struct file;
