@@ -123,6 +123,7 @@ void            yield(void);
 // BEGIN CHANGES
 int cowfork(void); 
 int dgrowproc(int);
+// END CHANGES
 
 // swtch.S
 void            swtch(struct context**, struct context*);

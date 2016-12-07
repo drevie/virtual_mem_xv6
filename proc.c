@@ -72,7 +72,11 @@ found:
 
   p->handlers[SIGKILL] = (sighandler_t) -1;
   p->handlers[SIGFPE] = (sighandler_t) -1;
+  // BEGIN CHANGES
+  p->handlers[SIGSEGV] = (sighandler_t) -1;
   p->restorer_addr = -1;
+  p->actualsz = 0; 
+  p->shared = 0;
 
   return p;
 }

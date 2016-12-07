@@ -388,8 +388,7 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 // Blank page.
 
 // BEGIN CHANGES
-int
-mprotect(addr, len, prot)
+int mprotect(addr, len, prot)
 {
   pte_t *pte;
 
@@ -417,8 +416,7 @@ struct entry
 struct spinlock tablelock; // lock for share table
 
 // share table initialize function
-void
-sharetableinit(void)
+void sharetableinit(void)
 {
   initlock(&tablelock, "sharetable");
   // cprintf("share table init done\n");
@@ -426,8 +424,7 @@ sharetableinit(void)
 
 // Given a parent process's page table, remap
 // it for a COW child.
-pde_t*
-cowmapuvm(pde_t *pgdir, uint sz)
+pde_t* cowmapuvm(pde_t *pgdir, uint sz)
 {
   // cprintf("in cow map\n");
 
@@ -471,8 +468,7 @@ bad:
   return 0;
 }
 
-int
-cowcopyuvm(void)
+int cowcopyuvm(void)
 {
 // cprintf("in cow copy, index: %d\n", index);
  uint pa;
@@ -514,8 +510,7 @@ bad:
   return 0;
 } 
 
-int
-cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
+int cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
   pte_t *pte;
   uint a, pa;
@@ -551,8 +546,7 @@ cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   return newsz;
 }
 
-void
-cowfreevm(pde_t *pgdir)
+void cowfreevm(pde_t *pgdir)
 {
   uint i;
 
@@ -571,8 +565,7 @@ cowfreevm(pde_t *pgdir)
 
 // Calculate the new size for growing process from oldsz to
 // newsz, which need not be page aligned. Returns new size or 0 on error.
-int
-dchangesize(uint oldsz, uint newsz)
+int dchangesize(uint oldsz, uint newsz)
 {
   uint a;
 
