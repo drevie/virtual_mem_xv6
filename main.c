@@ -29,7 +29,7 @@ main(void)
   uartinit();      // serial port
   pinit();         // process table
   // BEGIN CHANGES
-  shared_table_start();
+  sharetable();
   // END CHANGES
   tvinit();        // trap vectors
   binit();         // buffer cache

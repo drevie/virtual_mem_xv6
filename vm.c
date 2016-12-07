@@ -393,7 +393,7 @@ struct entry
 {
   // struct spinlock lock;
   int count;
-} shared_table[60 * 1024]; // table for all pages, upto 240MB(PHYSTOP)
+} sharetable[60 * 1024]; // table for all pages, upto 240MB(PHYSTOP)
 
 // BEGIN CHANGES for custom vm handling
 int mprotect(addr, len, prot)
@@ -421,7 +421,7 @@ int mprotect(addr, len, prot)
 struct spinlock tablelock; // lock for share table
 
 // share table initialize function
-void shared_table_start(void)
+void sharetable(void)
 {
   initlock(&tablelock, "shared_table");
   // cprintf("share table init done\n");
