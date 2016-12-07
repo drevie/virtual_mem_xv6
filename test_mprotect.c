@@ -19,7 +19,7 @@ void handler(int signum, siginfo_t info)
 } 
 int main(void)
 {
-	signal(SIGSEGV, (sighandler_t)handler);
+	signal(SIGSEGV, handler);
  	p = (int *) sbrk(1);
  	mprotect((void *)p, sizeof(int), PROT_READ);
  	*p=100;
