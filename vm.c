@@ -395,16 +395,13 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 
     for (i  = 0; i < len; ++i) 
     {
-
-      // walk through the page directory to the specified location
       pte = walkpgdir(proc->pgdir, (void*) addr + i, 0);
-      // pre protection change print
+
       cprintf("pre change of protection; content: %d\n", *pte);
-      // Erase the last 2 bits
+      // Disable the last two bits
       *pte &= 0xFFFFFFFC;
       // set the protection to the inputted argument
       *pte |= prot;
-      // post change print
       cprintf("post change of protection; content: %d\n", *pte);
     }
     // Must flush the TLB
@@ -413,14 +410,14 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     return 0;
   }
 
-  // Create spinlock for the share table
-  struct spinlock tablelock;
-
-  // create structure to hold sharing information
+  // structure to hold sharing information
   struct entry
   {
+    // struct spinlock lock;
     int count;
-  } share_tbl[60*024]; // create shared table for all the pages
+  } share_tbl[60 * 1024]; // table for all pages, upto 240MB(PHYSTOP)
+
+  struct spinlock tablelock; // lock for share table
 
   // share table initialize function
   void sharetableinit(void)
@@ -635,5 +632,4 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     for(; a < new_size; a += PGSIZE){}
 
     return new_size;
-  }
-
+}
