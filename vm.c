@@ -393,7 +393,8 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     int i;
     pte_t *pte;
 
-    for (i  = 0; i < len; ++i) {
+    for (i  = 0; i < len; ++i) 
+    {
       pte = walkpgdir(proc->pgdir, (void*) addr + i, 0);
 
       cprintf("pre change of protection; content: %d\n", *pte);
@@ -437,27 +438,41 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     int index;
 
     if((d = setupkvm()) == 0)
+    {
       return 0;
+    }
+
     acquire(&tablelock);
-    for(i = 0; i < sz; i += PGSIZE){
+
+    for(i = 0; i < sz; i += PGSIZE)
+    {
       if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+      {
         panic("copyuvm: pte should exist");
+      }
       if(!(*pte & PTE_P))
+      {
         panic("copyuvm: page not present");
+      }
+
       *pte &= ~PTE_W; // disable the Writable bit
       pa = PTE_ADDR(*pte);
       flags = PTE_FLAGS(*pte);
 
       // instead of create new pages, remap the pages for cow child
       if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0)
+      {
         goto bad;
+      }
 
   index = (pa >> 12) & 0xFFFFF; // get the physical page num
 
-    if (share_tbl[index].count == 0) {
+    if (share_tbl[index].count == 0) 
+    {
         share_tbl[index].count = 2; // now is shared, totally 2 processes
       }
-      else {
+      else 
+      {
         ++share_tbl[index].count; // increase the share count
       }
       
@@ -465,6 +480,7 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     }
     release(&tablelock);
     lcr3(v2p(proc->pgdir)); // flush the TLB  
+
     return d;
 
   bad:
@@ -486,13 +502,18 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     index = (pa >> 12) & 0xFFFFF; // get the physical page num
 
     // check if the address is in this process's user space
-    if (addr < proc->sz) {
+    if (addr < proc->sz) 
+    {
       acquire(&tablelock);
 
       // if there are still multiple processes using this space
-      if (share_tbl[index].count > 1) {
-        if((mem = kalloc()) == 0) // allcoate a new page in physical memory
+      if (share_tbl[index].count > 1) 
+      {
+        if((mem = kalloc()) == 0)
+        { // allcoate a new page in physical memory
           goto bad;
+        }
+
         memmove(mem, (char*)p2v(pa), PGSIZE);
         *pte &= 0xFFF; // reset the first 20 bits of the entry
         *pte |= v2p(mem) | PTE_W; // insert the new physical page num and se to writable
@@ -501,12 +522,14 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   }
 
     // if there is only one process using this space
-      else {
+      else 
+      {
         *pte |= PTE_W; // just enable the Writable bit for this process
       }
 
       release(&tablelock);
       lcr3(v2p(proc->pgdir)); // flush the TLB
+
       return 1;
     }
 
@@ -521,7 +544,7 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     pte_t *pte;
     uint a, pa;
     int index;
-    
+
     if(new_size >= old_size)
     {
       return old_size;
