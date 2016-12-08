@@ -474,7 +474,9 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
       // instead of create new pages, remap the pages for cow child
       if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0)
       {
-        goto bad;
+        //goto bad;
+        freevm(d);
+        return 0;
       }
 
   index = (pa >> 12) & 0xFFFFF; // get the physical page num
@@ -495,9 +497,9 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 
     return d;
 
-  bad:
+  /*bad:
     freevm(d);
-    return 0;
+    return 0; */
   }
 
 
