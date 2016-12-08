@@ -534,8 +534,7 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
       {
         if((mem = kalloc()) == 0)
         { // allcoate a new page in physical memory
-          //goto bad;
-          return 0; 
+          goto bad;
         }
 
         memmove(mem, (char*)p2v(pa), PGSIZE);
@@ -557,8 +556,7 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
       return 1;
     }
 
-  /*bad:
-    return 0;*/
+  bad:
     return 0;
   } 
 
