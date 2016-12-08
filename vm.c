@@ -387,37 +387,47 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
+//--------------------------------------------------------------------------------------
+
   // BEGIN CHANGES for custom vm handling
   int mprotect(addr, len, prot)
   {
     int i;
     pte_t *pte;
 
+
     for (i  = 0; i < len; ++i) 
     {
       pte = walkpgdir(proc->pgdir, (void*) addr + i, 0);
 
+      // Pre change print 
       cprintf("pre change of protection; content: %d\n", *pte);
-      // Disable the last two bits
+      // Clear the last two bits
       *pte &= 0xFFFFFFFC;
-      // set the protection to the inputted argument
+      // Set the protection to the inputted argument
       *pte |= prot;
+      // Post change print
       cprintf("post change of protection; content: %d\n", *pte);
     }
+
     // Must flush the TLB
     lcr3(v2p(proc->pgdir)); 
 
     return 0;
   }
 
+
+
+  struct spinlock tablelock; // lock for share table
+
+  
   // structure to hold sharing information
   struct entry
   {
-    // struct spinlock lock;
+    /
     int count;
   } share_tbl[60 * 1024]; // table for all pages, upto 240MB(PHYSTOP)
 
-  struct spinlock tablelock; // lock for share table
 
   // share table initialize function
   void sharetableinit(void)
