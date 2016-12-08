@@ -472,49 +472,6 @@ bad:
   return 0;
 }
 
-int cow_copy_uvm(void)
-{
-// cprintf("in cow copy, index: %d\n", index);
- uint pa;
-  int index;
-  uint addr;
-  pte_t *pte;
-  char *mem;
-
-  addr = rcr2();
-  pte = walkpgdir(proc->pgdir, (void *) addr, 0);
-  pa = PTE_ADDR(*pte);
-  index = (pa >> 12) & 0xFFFFF; // get the physical page num
-
-  // check if the address is in this process's user space
-  if (addr < proc->sz) {
-    acquire(&tablelock);
-
-    // if there are still multiple processes using this space
-    if (shareTable[index].count > 1) {
-      if((mem = kalloc()) == 0) // allcoate a new page in physical memory
-        goto bad;
-      memmove(mem, (char*)p2v(pa), PGSIZE);
-      *pte &= 0xFFF; // reset the first 20 bits of the entry
-      *pte |= v2p(mem) | PTE_W; // insert the new physical page num and se to writable
-
-      --shareTable[index].count; // decrease the share count
-}
-
-  // if there is only one process using this space
-    else {
-      *pte |= PTE_W; // just enable the Writable bit for this process
-    }
-
-    release(&tablelock);
-    lcr3(v2p(proc->pgdir)); // flush the TLB
-    return 1;
-  }
-
-bad:
-  return 0;
-} 
-
 int cow_dealloc_uvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
   pte_t *pte;
@@ -568,6 +525,51 @@ void cow_free_vm(pde_t *pgdir)
 
  kfree((char*)pgdir);
 }
+
+
+int cow_copy_uvm(void)
+{
+// cprintf("in cow copy, index: %d\n", index);
+ uint pa;
+  int index;
+  uint addr;
+  pte_t *pte;
+  char *mem;
+
+  addr = rcr2();
+  pte = walkpgdir(proc->pgdir, (void *) addr, 0);
+  pa = PTE_ADDR(*pte);
+  index = (pa >> 12) & 0xFFFFF; // get the physical page num
+
+  // check if the address is in this process's user space
+  if (addr < proc->sz) {
+    acquire(&tablelock);
+
+    // if there are still multiple processes using this space
+    if (shareTable[index].count > 1) {
+      if((mem = kalloc()) == 0) // allcoate a new page in physical memory
+        goto bad;
+      memmove(mem, (char*)p2v(pa), PGSIZE);
+      *pte &= 0xFFF; // reset the first 20 bits of the entry
+      *pte |= v2p(mem) | PTE_W; // insert the new physical page num and se to writable
+
+      --shareTable[index].count; // decrease the share count
+}
+
+  // if there is only one process using this space
+    else {
+      *pte |= PTE_W; // just enable the Writable bit for this process
+    }
+
+    release(&tablelock);
+    lcr3(v2p(proc->pgdir)); // flush the TLB
+    return 1;
+  }
+
+bad:
+  return 0;
+} 
+
 
 // Calculate the new size for growing process from oldsz to
 // newsz, which need not be page aligned. Returns new size or 0 on error.
