@@ -469,10 +469,9 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
         panic("copyuvm: page not present");
       } */
 
-      pa = PTE_ADDR(*pte);
-      flags = PTE_FLAGS(*pte);
-      // Clean the writable bit
-      *pte &= ~PTE_W; 
+    *pte &= ~PTE_W; // disable the Writable bit
+     pa = PTE_ADDR(*pte);
+    flags = PTE_FLAGS(*pte);
 
       // Begin remap pages for cow child
       if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0)
@@ -529,7 +528,7 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
       // Lock table
       acquire(&tablelock);
 
-      // Chec if multiple processes are using indexed space
+      // Chec if multiple processes are using in
       if (share_tbl[index].count > 1) 
       {
         if((mem = kalloc()) == 0)
