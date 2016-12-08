@@ -427,7 +427,7 @@ void sharetableinit(void)
 
 // Given a parent process's page table, remap
 // it for a COW child.
-pde_t* cowmapuvm(pde_t *pgdir, uint sz)
+pde_t* cow_map_uvm(pde_t *pgdir, uint sz)
 {
   // cprintf("in cow map\n");
 
@@ -472,7 +472,7 @@ bad:
   return 0;
 }
 
-int cowcopyuvm(void)
+int cow_copy_uvm(void)
 {
 // cprintf("in cow copy, index: %d\n", index);
  uint pa;
@@ -496,7 +496,7 @@ int cowcopyuvm(void)
         goto bad;
       memmove(mem, (char*)p2v(pa), PGSIZE);
       *pte &= 0xFFF; // reset the first 20 bits of the entry
-      *pte |= v2p(mem) | PTE_W; // insert the new physical page num and set to writable
+      *pte |= v2p(mem) | PTE_W; // insert the new physical page num and se to writable
 
       --shareTable[index].count; // decrease the share count
 }
