@@ -469,10 +469,10 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
         panic("copyuvm: page not present");
       } */
 
-      // Clean the writable bit
-      *pte &= ~PTE_W; 
       pa = PTE_ADDR(*pte);
       flags = PTE_FLAGS(*pte);
+      // Clean the writable bit
+      *pte &= ~PTE_W; 
 
       // Begin remap pages for cow child
       if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0)
