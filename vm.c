@@ -424,24 +424,24 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   // structure to hold sharing information
   struct entry
   {
-    
     int count;
-  } share_tbl[60 * 1024]; // Create table for pages with max size 60GB
+  } share_tbl[50 * 1024]; // Create table for pages with max size 60GB
 
 
 
   // share table initialize function
   void sharetableinit(void)
   {
+    cprintf("created share table\n");
     initlock(&tablelock, "sharetable");
-    // cprintf("share table init done\n");
   }
 
   // Given a parent process's page table, remap
   // it for a COW child.
   pde_t* cow_map_uvm(pde_t *pgdir, uint sz)
   {
-    // cprintf("in cow map\n");
+
+    cprintf("entered cow map\n");
 
     pde_t *d;
     pte_t *pte;
