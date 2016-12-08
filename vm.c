@@ -413,13 +413,14 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     return 0;
   }
 
+  // Create spinlock for the share table
+  struct spinlock tablelock;
+
   // create structure to hold sharing information
   struct entry
   {
     int count;
-  } share_tbl[60*024]; // table for all pages, upto 240MB(PHYSTOP)
-
-  struct spinlock tablelock; // lock for share table
+  } share_tbl[60*024]; // create shared table for all the pages
 
   // share table initialize function
   void sharetableinit(void)
