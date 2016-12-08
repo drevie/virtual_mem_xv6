@@ -426,7 +426,7 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   {
     
     int count;
-  } share_tbl[10 * 1024]; // Create table for pages with max size 60GB
+  } share_tbl[60 * 1024]; // Create table for pages with max size 60GB
 
 
 
