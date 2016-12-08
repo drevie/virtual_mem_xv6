@@ -459,20 +459,22 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 
     for(i = 0; i < sz; i += PGSIZE)
     {
-      if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+      
+      /*if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       {
         panic("copyuvm: pte should exist");
       }
       if(!(*pte & PTE_P))
       {
         panic("copyuvm: page not present");
-      }
+      } */
 
-      *pte &= ~PTE_W; // disable the Writable bit
+      // Clean the writable bit
+      *pte &= ~PTE_W; 
       pa = PTE_ADDR(*pte);
       flags = PTE_FLAGS(*pte);
 
-      // instead of create new pages, remap the pages for cow child
+      // Begin remap pages for cow child
       if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0)
       {
         //goto bad;
@@ -492,8 +494,6 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
       {
         ++share_tbl[index].count; 
       }
-      
-      // cprintf("pid: %d index: %d count: %d\n", proc->pid, index, share_tbl[index].count);
     }
 
     // Unlock the table
@@ -519,19 +519,23 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     addr = rcr2();
     pte = walkpgdir(proc->pgdir, (void *) addr, 0);
     pa = PTE_ADDR(*pte);
-    index = (pa >> 12) & 0xFFFFF; // get the physical page num
 
-    // check if the address is in this process's user space
+    // Set index to the physcial page number
+    index = (pa >> 12) & 0xFFFFF;
+
+    // Check that address in the processes user space
     if (addr < proc->sz) 
-    {
+    { 
+      // Lock table
       acquire(&tablelock);
 
-      // if there are still multiple processes using this space
+      // Chec if multiple processes are using indexed space
       if (share_tbl[index].count > 1) 
       {
         if((mem = kalloc()) == 0)
         { // allcoate a new page in physical memory
-          goto bad;
+          //goto bad;
+          return 0; 
         }
 
         memmove(mem, (char*)p2v(pa), PGSIZE);
@@ -553,8 +557,8 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
       return 1;
     }
 
-  bad:
-    return 0;
+  /*bad:
+    return 0;*/
   } 
 
 
