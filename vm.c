@@ -521,7 +521,6 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     pte_t *pte;
     uint a, pa;
     int index;
-
     if(new_size >= old_size)
       return old_size;
      a = PGROUNDUP(new_size);
@@ -572,7 +571,7 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 
   // Calculate the new size for growing process from old_size to
   // new_size, which need not be page aligned. Returns new size or 0 on error.
-  int dchangesize(uint old_size, uint new_size)
+  int dchangesize(uint new_size, uint old_size)
   {
     uint a;
 
