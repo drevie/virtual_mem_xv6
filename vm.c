@@ -460,14 +460,14 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     for(i = 0; i < sz; i += PGSIZE)
     {
       
-      /*if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+      if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       {
         panic("copyuvm: pte should exist");
       }
       if(!(*pte & PTE_P))
       {
         panic("copyuvm: page not present");
-      } */
+      } 
 
     *pte &= ~PTE_W; // disable the Writable bit
      pa = PTE_ADDR(*pte);
