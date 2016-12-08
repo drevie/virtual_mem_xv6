@@ -454,6 +454,7 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
       return 0;
     }
 
+    // Lock the table
     acquire(&tablelock);
 
     for(i = 0; i < sz; i += PGSIZE)
@@ -479,21 +480,26 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
         return 0;
       }
 
-  index = (pa >> 12) & 0xFFFFF; // get the physical page num
+    // Set index to the physical page number
+    index = (pa >> 12) & 0xFFFFF; 
 
     if (share_tbl[index].count == 0) 
     {
-        share_tbl[index].count = 2; // now is shared, totally 2 processes
+        // If the couunt of the index is 0 it now becomes two
+        share_tbl[index].count = 2; 
       }
-      else 
+      else // Otherwise add another process
       {
-        ++share_tbl[index].count; // increase the share count
+        ++share_tbl[index].count; 
       }
       
       // cprintf("pid: %d index: %d count: %d\n", proc->pid, index, share_tbl[index].count);
     }
+
+    // Unlock the table
     release(&tablelock);
-    lcr3(v2p(proc->pgdir)); // flush the TLB  
+    // Must flush the TLB
+    lcr3(v2p(proc->pgdir));
 
     return d;
 
