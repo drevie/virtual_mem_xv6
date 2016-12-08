@@ -189,7 +189,7 @@ int mprotect(int addr, int len, int prot);
 int cow_copy_uvm(void); 
 pde_t* cow_map_uvm(pde_t*, uint);
 void sharetableinit(void);
-void cowfreevm(pde_t*);
+void cow_free_vm(pde_t*);
 int dchangesize(uint, uint);
 int dallocuvm(pde_t*, uint, uint);
 // END CHANGES

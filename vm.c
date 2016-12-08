@@ -515,7 +515,7 @@ bad:
   return 0;
 } 
 
-int cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
+int cow_dealloc_uvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
   pte_t *pte;
   uint a, pa;
@@ -552,13 +552,13 @@ int cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   return newsz;
 }
 
-void cowfreevm(pde_t *pgdir)
+void cow_free_vm(pde_t *pgdir)
 {
   uint i;
 
   if(pgdir == 0)
     panic("freevm: no pgdir");
-  cowdeallocuvm(pgdir, KERNBASE, 0);
+  cow_dealloc_uvm(pgdir, KERNBASE, 0);
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){
       char *v = p2v(PTE_ADDR(pgdir[i]));
