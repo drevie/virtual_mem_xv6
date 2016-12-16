@@ -508,30 +508,28 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     pte = walkpgdir(proc->pgdir, (void *) addr, 0);
     pa = PTE_ADDR(*pte);
 
+    // Set index to the physcial page number
     index = (pa >> 12) & 0xFFFFF;
 
-
+    // Check that address in the processes user space
     if (addr < proc->sz) 
     { 
       // Lock table
       acquire(&tablelock);
 
-      // Chec if multiple processes are using in
       if (share_tbl[index].count > 1) 
       {
         if((mem = kalloc()) == 0)
-        { 
+        {
           return 0;
         }
 
         memmove(mem, (char*)p2v(pa), PGSIZE);
-        // restore the first 20 bits
-        *pte &= 0xFFF; 
+        *pte &= 0xFFF; /
         *pte |= v2p(mem) | PTE_W; 
 
         --share_tbl[index].count;
-  }
-
+  } 
       else 
       {
         *pte |= PTE_W; 
@@ -543,6 +541,8 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 
       return 1;
     }
+
+    return 0;
   } 
 
 
