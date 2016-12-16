@@ -525,7 +525,7 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
         }
 
         memmove(mem, (char*)p2v(pa), PGSIZE);
-        *pte &= 0xFFF; /
+        *pte &= 0xFFF; 
         *pte |= v2p(mem) | PTE_W; 
 
         --share_tbl[index].count;
