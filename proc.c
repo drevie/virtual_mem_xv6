@@ -568,10 +568,8 @@ int dgrowproc(int n)
     if((sz = dchangesize(sz, sz + n)) == 0)
       return -1;
   } 
-  else {
-    cprintf("Could not use dsbrk with inpositive size!\n");
-    return -1;
-  }
+  else return -1;
+  
   proc->sz = sz;
   return 0;
 }

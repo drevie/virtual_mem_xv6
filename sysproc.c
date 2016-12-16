@@ -146,11 +146,8 @@ int sys_mprotect(void)
   if (argint(2, &prot) < 0)
     return -1;
 
-  if (prot > 0x003 || prot == 0x002) // invalid input for protection level
+  if (prot > 0x003 || prot == 0x002)
     return -1;
-
-  // Begin print
-  cprintf("addr= %d\nlen= %d\nprot= %d\n", addr, len, prot);
 
   // call mrprotect
   return mprotect(addr, len, prot);
@@ -178,7 +175,7 @@ int sys_dsbrk(void)
   if(argint(0, &n) < 0)
     return -1;
   addr = proc->sz;
-  
+
   if(dgrowproc(n) < 0)
     return -1;
   
