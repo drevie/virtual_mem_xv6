@@ -421,28 +421,23 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   struct spinlock tablelock; 
 
 
-  // structure to hold sharing information
   struct entry
   {
     int count;
-  } share_tbl[60 * 1024]; // Create table for pages with max size 60GB
+  } share_tbl[60 * 1024]; 
 
 
 
-  // share table initialize function
+  
   void sharetableinit(void)
   {
     cprintf("created share table\n");
     initlock(&tablelock, "sharetable");
   }
 
-  // Given a parent process's page table, remap
-  // it for a COW child.
-  // Create cow map 
+
   pde_t* cow_map_uvm(pde_t *pgdir, uint sz)
   {
-
-    //cprintf("entered cow map\n");
 
     pte_t *pte;
     pde_t *d;
@@ -462,34 +457,31 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
       
       if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       {
-        panic("copyuvm: pte should exist");
+        panic("the pte should exist");
       }
       if(!(*pte & PTE_P))
       {
-        panic("copyuvm: page not present");
+        panic("the page isn't present");
       } 
 
-    *pte &= ~PTE_W; // disable the Writable bit
+    *pte &= ~PTE_W;
      pa = PTE_ADDR(*pte);
     flags = PTE_FLAGS(*pte);
 
-      // Begin remap pages for cow child
+    
       if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0)
       {
-        //goto bad;
         freevm(d);
         return 0;
       }
 
-    // Set index to the physical page number
     index = (pa >> 12) & 0xFFFFF; 
 
     if (share_tbl[index].count == 0) 
     {
-        // If the couunt of the index is 0 it now becomes two
         share_tbl[index].count = 2; 
       }
-      else // Otherwise add another process
+      else 
       {
         ++share_tbl[index].count; 
       }
@@ -502,9 +494,6 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 
     return d;
 
-  /*bad:
-    freevm(d);
-    return 0; */
   }
 
 
@@ -519,10 +508,9 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     pte = walkpgdir(proc->pgdir, (void *) addr, 0);
     pa = PTE_ADDR(*pte);
 
-    // Set index to the physcial page number
     index = (pa >> 12) & 0xFFFFF;
 
-    // Check that address in the processes user space
+
     if (addr < proc->sz) 
     { 
       // Lock table
@@ -532,31 +520,29 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
       if (share_tbl[index].count > 1) 
       {
         if((mem = kalloc()) == 0)
-        { // allcoate a new page in physical memory
-          goto bad;
+        { 
+          return 0;
         }
 
         memmove(mem, (char*)p2v(pa), PGSIZE);
-        *pte &= 0xFFF; // reset the first 20 bits of the entry
-        *pte |= v2p(mem) | PTE_W; // insert the new physical page num and se to writable
+        // restore the first 20 bits
+        *pte &= 0xFFF; 
+        *pte |= v2p(mem) | PTE_W; 
 
-        --share_tbl[index].count; // decrease the share count
+        --share_tbl[index].count;
   }
 
-    // if there is only one process using this space
       else 
       {
-        *pte |= PTE_W; // just enable the Writable bit for this process
+        *pte |= PTE_W; 
       }
 
       release(&tablelock);
-      lcr3(v2p(proc->pgdir)); // flush the TLB
+      // Must flush the TLB
+      lcr3(v2p(proc->pgdir)); 
 
       return 1;
     }
-
-  bad:
-    return 0;
   } 
 
 
