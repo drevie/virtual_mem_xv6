@@ -492,7 +492,7 @@ void signal_deliver(int signum, siginfo_t info)
  uint prev_eip = proc->tf->eip;
 
 
-  *((uint*)(proc->tf->esp - 4))  = (uint) prev_eip; 
+  *((uint*)(proc->tf->esp - 4))  = (uint) _eip; 
   *((uint*)(proc->tf->esp - 8))  = proc->tf->eax;
   *((uint*)(proc->tf->esp - 12)) = proc->tf->ecx;
   *((uint*)(proc->tf->esp - 16)) = proc->tf->edx;
@@ -517,32 +517,33 @@ sighandler_t signal_register_handler(int signum, sighandler_t handler)
 	return previous;
 }
 
-// BEGIN CHANGES cowfork
 int cowfork(void)
 {
   int i, pid;
   struct proc *np;
 
-  if((np = allocproc()) == 0 return -1;
+  if((np = allocproc()) == 0) return -1;
 
-  if((np->pgdir = cow_map_uvm(proc->pgdir, proc->sz)) == 0){
+  if((np->pgdir = cow_map_uvm(proc->pgdir, proc->sz)) == 0)
+  {
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
   }
+
   np->sz = proc->sz;
   np->parent = proc;
   *np->tf = *proc->tf;
 
-  np->tf->eax = 0;
 
+  np->tf->eax = 0;
   proc->shared = 1;
   np->shared = 1;
 
   for(i = 0; i < NOFILE; i++)
-    if(proc->ofile[i])
-      np->ofile[i] = filedup(proc->ofile[i]);
+    if(proc->ofile[i]) np->ofile[i] = filedup(proc->ofile[i]);
+
   np->cwd = idup(proc->cwd);
 
   safestrcpy(np->name, proc->name, sizeof(proc->name));
