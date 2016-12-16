@@ -81,34 +81,35 @@ trap(struct trapframe *tf)
    case T_DIVIDE:
       // BEGIN CHANGES
       if (proc->handlers[SIGFPE] != (sighandler_t) -1) {
-      siginfo_t info;
-      info.addr = 0;
-      info.type = 0;
-      signal_deliver(SIGFPE, info);
+      siginfo_t s_info;
+      s_info.addr = 0;
+     s_info.type = 0;
+      signal_deliver(SIGFPE, s_info);
       break;
 }
 
   // BEGIN CHANGES T_PGFLT
   case T_PGFLT:
-    if (proc->handlers[SIGSEGV] != (sighandler_t) -1) {
-      siginfo_t info;
-      info.addr = rcr2(); // get the error access address
+    if (proc->handlers[SIGSEGV] != (sighandler_t) -1) 
+    {
+      siginfo_t s_info;
+      s_info.addr = rcr2(); 
 
       uint temp = tf->err;
       cprintf("err num: 0x%x\n", temp);
       // make sure it is not a Supervisory process
       if (temp >= 0x4) {
         if (temp == 0x4 || temp == 0x6) {
-          info.type = PROT_NONE;
+          s_info.type = PROT_NONE;
         }
         else if (temp == 0x7) {
-          info.type = PROT_READ;
+          s_info.type = PROT_READ;
         }
         else {
-          info.type = PROT_WRITE; 
+          s_info.type = PROT_WRITE; 
         }
    
-        signal_deliver(SIGSEGV, info);
+        signal_deliver(SIGSEGV, s_info);
         break;
       }
     }
