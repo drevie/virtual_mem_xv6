@@ -571,17 +571,14 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
       else if((*pte & PTE_P) != 0)
       {
         pa = PTE_ADDR(*pte);
-        index = (pa >> 12) & 0xFFFFF; // get the physical page num
-        if(pa == 0)
-        {
-          panic("kfree");
-        }
-        // if there are more than one process sharing the space, decrease the counter
+        index = (pa >> 12) & 0xFFFFF; 
+        if(pa == 0) panic("kfree");
+     
         if (share_tbl[index].count > 1) 
         {
           --share_tbl[index].count;
         }
-        // if the memory space is only used by this process, free it
+       
         else 
         {
           char *v = p2v(pa);
@@ -600,10 +597,8 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   {
     uint i;
 
-    if(pgdir == 0)
-    {
-      panic("freevm: no pgdir");
-    }
+    if(pgdir == 0) panic("free_vm: no pgdir");
+    
 
     cow_dealloc_uvm(pgdir, KERNBASE, 0);
 
@@ -619,11 +614,9 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
    kfree((char*)pgdir);
   }
 
-  // Calculate the new size for growing process from old_size to
-  // new_size, which need not be page aligned. Returns new size or 0 on error.
   int dchangesize(uint new_size, uint old_size)
   {
-    uint a;
+    uint i;
 
     if(new_size >= KERNBASE)
     {
@@ -635,9 +628,9 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
       return old_size;
     }
 
-    a = PGROUNDUP(old_size);
+    i = PGROUNDUP(old_size);
 
-    for(; a < new_size; a += PGSIZE){}
+    for(; i < new_size; i += PGSIZE){}
 
     return new_size;
 }

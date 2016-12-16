@@ -489,17 +489,17 @@ procdump(void)
 // change function arguments
 void signal_deliver(int signum, siginfo_t info)
 {
- uint old_eip = proc->tf->eip;
-  // cprintf("tf->eip: %d\n", old_eip);
+ uint prev_eip = proc->tf->eip;
 
-  *((uint*)(proc->tf->esp - 4))  = (uint) old_eip;    // real return address
-  *((uint*)(proc->tf->esp - 8))  = proc->tf->eax;     // eax
-  *((uint*)(proc->tf->esp - 12)) = proc->tf->ecx;     // ecx
-  *((uint*)(proc->tf->esp - 16)) = proc->tf->edx;     // edx
-  *((uint*)(proc->tf->esp - 20)) = info.type;     // push info.type
-  *((uint*)(proc->tf->esp - 24)) = info.addr;     // push info.addr
-  *((uint*)(proc->tf->esp - 28)) = (uint) signum;     // signal number
-  *((uint*)(proc->tf->esp - 32)) = proc->restorer_addr; // address of restorer
+
+  *((uint*)(proc->tf->esp - 4))  = (uint) prev_eip; 
+  *((uint*)(proc->tf->esp - 8))  = proc->tf->eax;
+  *((uint*)(proc->tf->esp - 12)) = proc->tf->ecx;
+  *((uint*)(proc->tf->esp - 16)) = proc->tf->edx;
+  *((uint*)(proc->tf->esp - 20)) = info.type;
+  *((uint*)(proc->tf->esp - 24)) = info.addr;
+  *((uint*)(proc->tf->esp - 28)) = (uint) signum;
+  *((uint*)(proc->tf->esp - 32)) = proc->restorer_addr;
   proc->tf->esp -= 32;
   proc->tf->eip = (uint) proc->handlers[signum];
 }

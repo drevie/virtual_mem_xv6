@@ -83,7 +83,7 @@ trap(struct trapframe *tf)
       if (proc->handlers[SIGFPE] != (sighandler_t) -1) {
       siginfo_t s_info;
       s_info.addr = 0;
-     s_info.type = 0;
+      s_info.type = 0;
       signal_deliver(SIGFPE, s_info);
       break;
 }
@@ -97,15 +97,18 @@ trap(struct trapframe *tf)
 
       uint temp = tf->err;
       cprintf("err num: 0x%x\n", temp);
-      // make sure it is not a Supervisory process
-      if (temp >= 0x4) {
-        if (temp == 0x4 || temp == 0x6) {
+      if (temp >= 0x4) 
+      {
+        if (temp == 0x4 || temp == 0x6)
+         {
           s_info.type = PROT_NONE;
         }
-        else if (temp == 0x7) {
+        else if (temp == 0x7) 
+        {
           s_info.type = PROT_READ;
         }
-        else {
+        else 
+        {
           s_info.type = PROT_WRITE; 
         }
    
@@ -114,22 +117,15 @@ trap(struct trapframe *tf)
       }
     }
 
-    // for share part
-    if (proc->shared == 1 && cow_copy_uvm() != 0) {
-      // cprintf("return addr: %d\n", tf->eip);
-      break;
-    }
-
-
-    // for the demand heap allocation
+    if (proc->shared == 1 && cow_copy_uvm() != 0) break;
+    
     uint addr = rcr2(); 
-    // judge if the err address is in the heap space
-    if (addr > tf->ebp && addr < proc->sz && proc->actualsz != proc->sz) {
-      // cprintf("proc size: %d\n", proc->sz);
-      // cprintf("proc actual size: %d\n", proc->actualsz);
-      // cprintf("error addr: %d\n", rcr2());
+
+    if (addr > tf->ebp && addr < proc->sz && proc->actualsz != proc->sz) 
+    {
       proc->actualsz = allocuvm(proc->pgdir, proc->actualsz, addr + 1);
-      if (proc->actualsz == proc->sz) {
+      if (proc->actualsz == proc->sz)
+       {
         proc->actualsz = 0;
       }
       switchuvm(proc);
