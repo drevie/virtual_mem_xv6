@@ -523,11 +523,8 @@ int cowfork(void)
   int i, pid;
   struct proc *np;
 
-  // Allocate process.
-  if((np = allocproc()) == 0)
-    return -1;
+  if((np = allocproc()) == 0 return -1;
 
-  // Copy process state from p.
   if((np->pgdir = cow_map_uvm(proc->pgdir, proc->sz)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
@@ -538,10 +535,8 @@ int cowfork(void)
   np->parent = proc;
   *np->tf = *proc->tf;
 
-  // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
-  // set the shared flag to 1
   proc->shared = 1;
   np->shared = 1;
 
@@ -554,7 +549,6 @@ int cowfork(void)
  
   pid = np->pid;
 
-  // lock to force the compiler to emit the np->state write last.
   acquire(&ptable.lock);
   np->state = RUNNABLE;
   release(&ptable.lock);
