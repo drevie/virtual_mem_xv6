@@ -492,7 +492,7 @@ void signal_deliver(int signum, siginfo_t info)
  uint prev_eip = proc->tf->eip;
 
 
-  *((uint*)(proc->tf->esp - 4))  = (uint) _eip; 
+  *((uint*)(proc->tf->esp - 4))  = (uint) prev_eip; 
   *((uint*)(proc->tf->esp - 8))  = proc->tf->eax;
   *((uint*)(proc->tf->esp - 12)) = proc->tf->ecx;
   *((uint*)(proc->tf->esp - 16)) = proc->tf->edx;
